@@ -17,26 +17,11 @@ from torch.autograd import Variable
 from resnet import ResNet
 import pandas as pd
 from datetime import datetime
-#from torchsummary import summary
 import wandb 
 print('wandb version',wandb.__version__)
 torch.backends.cudnn.enabled = False
  
-'''
-./c-submit --require-gpu-mem="8G" --gpu-count="1" --require-mem="40G" --require-cpus="8" --priority="high" khrystynafaryna 9548 72 doduo1.umcn.nl/khrystynafaryna/kf_container_invariant:latest python3 /data/pathology/projects/autoaugmentation/from_chansey_review/invariant/train.py --val_set  val_rh_umcu_ --m 0 --n 0 --k 16 coef 600 --dataset camelyon17 --dataroot '/data/pathology/projects/autoaugmentation/from_chansey_upd/data/lymph/patches/'
 
-./c-submit --require-gpu-mem="8G" --gpu-count="1" --require-cpus="4"  --require-mem="20G" --node="dlc-sycorax"--interactive --priority="high" --env CODEBASE=/data/pathology/projects/autoaugmentation/from_chansey_review/invariant  khrystynafaryna 9548 4  doduo1.umcn.nl/khrystynafaryna/kf_container_invariant:latest
-
-./c-submit --require-gpu-mem="8G" --gpu-count="1" --require-mem="40G" --require-cpus="8" --priority="low" khrystynafaryna 9548 72 doduo1.umcn.nl/khrystynafaryna/kf_container_invariant:latest python3 /data/pathology/projects/autoaugmentation/from_chansey_review/invariant/train.py --val_set  val_cwh_lpe_ --m 0 --n 0 --k 16 --coef 600 --dataset camelyon17 --dataroot '/data/pathology/projects/autoaugmentation/from_chansey_upd/data/lymph/patches/'
-
-./c-submit --require-gpu-mem="8G" --gpu-count="1" --require-mem="40G" --require-cpus="8" --priority="low" khrystynafaryna 9548 72 doduo1.umcn.nl/khrystynafaryna/kf_container_invariant:latest python3 /data/pathology/projects/autoaugmentation/from_chansey_review/invariant/train.py --val_set  validation_ --m 0 --n 0 --k 16 --coef 30 --dataset mitosis --dataroot '/data/pathology/projects/autoaugmentation/from_chansey_upd/data/mitosis/patches/'
-
-./c-submit --require-gpu-mem="8G" --gpu-count="1" --require-mem="40G" --require-cpus="8" --priority="high" khrystynafaryna 9548 72 doduo1.umcn.nl/khrystynafaryna/kf_container_invariant:latest python3 /data/pathology/projects/autoaugmentation/from_chansey_review/invariant/train.py --val_set  val_cwh_lpe_ --m 0 --n 0 --k 32 --coef 15 --dataset camelyon17 --dataroot '/data/pathology/projects/autoaugmentation/from_chansey_upd/data/lymph/patches/'
-
-./c-submit --require-gpu-mem="8G" --gpu-count="1" --require-mem="20G" --require-cpus="8" --priority="low" khrystynafaryna 9548 10 doduo1.umcn.nl/khrystynafaryna/kf_container_invariant:latest python3 /data/pathology/projects/autoaugmentation/from_chansey_review/invariant/train.py --dataroot '/data/pathology/projects/autoaugmentation/from_chansey_upd/data/midog/patches/' --dataset midog --train_set training_hamamatsu_xr_ --val_set  validation_hamamatsu_s360_ --m 0 --n 0 --k 32 --coef 15
-
-
-'''
 parser = argparse.ArgumentParser("camelyon17")
 parser.add_argument('--dataroot', type=str, default='/data/pathology/projects/autoaugmentation/from_chansey_upd/data/tiger/patches/', help='location of the data corpus')
 parser.add_argument('--dataset', type=str, default='camelyon17',choices=['camelyon17','none','tiger','midog','mitosis'],
@@ -112,7 +97,7 @@ fh = logging.FileHandler(os.path.join(args.save, 'log.txt'))
 fh.setFormatter(logging.Formatter(log_format))
 logging.getLogger().addHandler(fh)
 
-num_classes=2
+
 
 
 def main():
@@ -120,10 +105,6 @@ def main():
     logging.info('no gpu device available')
     sys.exit(1)
 
-  # np.random.seed(args.seed)
-  # torch.cuda.set_device(args.gpu)
-  # torch.manual_seed(args.seed)
-  # torch.cuda.manual_seed(args.seed)
   cudnn.benchmark = True
   
   cudnn.enabled=True
@@ -131,7 +112,7 @@ def main():
   logging.info('gpu device = %d' % args.gpu)
   logging.info("args = %s", args)
   
-  model = ResNet(dataset=args.net_version, depth=18, num_classes=num_classes, bottleneck=True, k=args.k)
+  model = ResNet(dataset=args.net_version, depth=18, num_classes=2, bottleneck=True, k=args.k)
   print(model)
   model = model.cuda()
 
@@ -151,7 +132,7 @@ def main():
     print('This optimizer is not implemented')
 
 
-  train_queue, valid_queue = get_dataloaders(args.dataset, args.batch_size, args.num_workers, dataroot=args.dataroot, train_set=args.train_set, val_set=args.val_set, augmenter='morphology',k=args.k,coef=args.coef)
+  train_queue, valid_queue = get_dataloaders(args.dataset, args.batch_size, args.num_workers, dataroot=args.dataroot, train_set=args.train_set, val_set=args.val_set, augmenter='none',k=args.k,coef=args.coef)
 
 
   if args.lr_schedule=='rlop':
@@ -267,10 +248,7 @@ def train(train_queue, model, criterion, optimizer, sample_weighted_loss=True):
     model.train()
 
     for step, (inpt, target) in enumerate(train_queue):
-        #print("input shape",inpt.shape)
-        #print("label shape",target.shape)
-      
-        
+   
       
         inpt = Variable(inpt.type(torch.FloatTensor), requires_grad=False).cuda()
 
