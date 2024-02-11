@@ -359,8 +359,8 @@ class ResNet(nn.Module):
 
         elif self.dataset == '2d-nxk':
             b, c, h, w, z = x.shape
-            letters = string.ascii_lowercase
-            im_name = ''.join(random.choice(letters) for i in range(10))
+            #letters = string.ascii_lowercase
+            #im_name = ''.join(random.choice(letters) for i in range(10))
             x = x.permute(0,1,-1,2,3)
 
             x = x.reshape(b, c*z, h, w)
@@ -381,12 +381,7 @@ class ResNet(nn.Module):
                    
                     
             #        plt.imsave("/data/pathology/projects/autoaugmentation/from_chansey_review/invariant/net_img/"+str(i)+'_'+str(j)+'_'+im_name+".png",x[0,i,:,:,j].detach().cpu().numpy())
-
-            
-
-            
-
-            
+  
             x = self.maxadpool1_3d(x)
             x = torch.squeeze(x, -1)
             x = self.conv1(x)
